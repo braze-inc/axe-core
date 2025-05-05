@@ -1,6 +1,11 @@
 describe('helpers.incompleteFallbackMessage', function () {
   'use strict';
 
+  beforeEach(function () {
+    // Reset audit to initial state to ensure default data is loaded
+    axe._audit._init();
+  });
+
   it('returns a non-empty string by default', function () {
     var summary = helpers.incompleteFallbackMessage();
     assert.typeOf(summary, 'string');
