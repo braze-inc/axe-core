@@ -16,9 +16,7 @@ module.exports = function (grunt) {
        * hence cannot be required at the top of the file.
        */
       const done = this.async();
-      const { langs } = this.options();
-      const fileNameSuffix = langs && langs.length > 0 ? `${langs[0]}` : '';
-      const axe = require(`../../axe${fileNameSuffix}`);
+      const axe = require('../../axe');
       const listType = this.data.listType.toLowerCase();
       const headings = {
         main:
@@ -30,7 +28,7 @@ module.exports = function (grunt) {
           'Axe-core does some of this work for you, by raising issues when accessibility features are ' +
           'used that are known to cause problems.\n\n' +
           'This page contains a list of ARIA 1.1 features that axe-core raises as unsupported. ' +
-          'For more information, read [We’ve got your back with “Accessibility Supported” in axe]' +
+          'For more information, read [We\'ve got your back with "Accessibility Supported" in axe]' +
           '(https://www.deque.com/blog/weve-got-your-back-with-accessibility-supported-in-axe/).\n\n' +
           'For a detailed description about how accessibility support is decided, see [How we make ' +
           'decisions on rules](accessibility-supported.md).',

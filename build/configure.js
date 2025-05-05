@@ -22,24 +22,12 @@ var descriptionTableHeader =
 // summaries). must be synced with lib/core/imports/index.js
 doT.templateSettings.strip = false;
 
-function getLocale(grunt, options) {
-  var localeFile;
-  if (options.locale) {
-    localeFile = './locales/' + options.locale + '.json';
-  }
-
-  if (localeFile) {
-    return grunt.file.readJSON(localeFile);
-  }
-}
-
 function makeHeaderLink(title) {
   return title.replace(/ /g, '-').replace(/[\.&]/g, '').toLowerCase();
 }
 
 function buildRules(grunt, options, commons, callback) {
-  var axeImpact = Object.freeze(['minor', 'moderate', 'serious', 'critical']); // TODO: require('../axe') does not work if grunt configure is moved after uglify, npm test breaks with undefined. Complicated grunt concurrency issue.
-  var locale = getLocale(grunt, options);
+  var axeImpact = Object.freeze(['minor', 'moderate', 'serious', 'critical']);
   options.getFiles = false;
   buildManual(grunt, options, commons, function (build) {
     var metadata = {
@@ -99,24 +87,10 @@ function buildRules(grunt, options, commons, callback) {
     var rules = build.rules;
     var checks = build.checks;
 
-    // Translate checks before parsing them so that translations
-    // get applied to the metadata object
-    if (locale && locale.checks) {
-      checks.forEach(function (check) {
-        if (locale.checks[check.id] && check.metadata) {
-          check.metadata.messages = locale.checks[check.id];
-        }
-      });
-    }
-
     parseChecks(checks);
 
-    function parseMetaData(source, propType) {
+    function parseMetaData(source) {
       var data = source.metadata;
-      var id = source.id || source.type;
-      if (id && locale && locale[propType] && propType !== 'checks') {
-        data = locale[propType][id] || data;
-      }
       var result = clone(data) || {};
 
       if (result.messages) {
@@ -417,7 +391,6 @@ ${ruleTables}`;
       auto: replaceFunctions(
         JSON.stringify(
           {
-            lang: options.locale || 'en',
             data: metadata,
             rules: rules,
             checks: checks
