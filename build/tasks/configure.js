@@ -18,14 +18,8 @@ module.exports = function (grunt) {
       });
 
       this.files.forEach(function (file) {
-        // locale will always be the 2nd to last part of the
-        // filename and in the format of "<name>.<locale>.js"
-        const parts = file.dest.auto.split('.');
-        if (parts.length > 2) {
-          options.locale = parts[parts.length - 2];
-        }
-
         buildRules(grunt, options, null, function (result) {
+          // Only write the rules data, without any locale data
           grunt.file.write(file.dest.auto, 'axe._load(' + result.auto + ');');
 
           // Format the content so Prettier doesn't create a diff after running.

@@ -14,12 +14,15 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-bytesize');
   grunt.loadTasks('build/tasks');
 
+  // Get supported languages from command line options
   var langs;
   if (grunt.option('lang')) {
-    langs = (grunt.option('lang') || '').split(/[,;]/g).map(function (lang) {
-      lang = lang.trim();
-      return lang !== 'en' ? '.' + lang : '';
-    });
+    langs = grunt
+      .option('lang')
+      .split(/[,;]/g)
+      .map(function (lang) {
+        return lang.trim();
+      });
   } else if (grunt.option('all-lang')) {
     var localeFiles = require('fs').readdirSync('./locales');
     langs = localeFiles
@@ -27,11 +30,10 @@ module.exports = function (grunt) {
         return !file.startsWith('_') && file.endsWith('.json');
       })
       .map(function (file) {
-        return '.' + file.replace('.json', '');
+        return file.replace('.json', '');
       });
-    langs.unshift(''); // Add default
   } else {
-    langs = [''];
+    langs = ['en']; // Default to English
   }
 
   // run tests only for affected files instead of all tests
@@ -70,6 +72,16 @@ module.exports = function (grunt) {
             dest: 'tmp'
           }
         ]
+      },
+      locale: {
+        files: [
+          {
+            expand: true,
+            cwd: 'lib/core',
+            src: ['locale-loader.js'],
+            dest: 'tmp/core'
+          }
+        ]
       }
     },
     'update-help': {
@@ -86,18 +98,18 @@ module.exports = function (grunt) {
           process: true
         },
         coreFiles: ['tmp/core/index.js', 'tmp/core/**/*.js'],
-        files: langs.map(function (lang, i) {
-          return {
+        files: [
+          {
             src: [
               'lib/intro.stub',
               '<%= concat.engine.coreFiles %>',
               // include rules / checks / commons
-              '<%= configure.rules.files[' + i + '].dest.auto %>',
+              '<%= configure.rules.files[0].dest.auto %>',
               'lib/outro.stub'
             ],
-            dest: 'axe' + lang + '.js'
-          };
-        })
+            dest: 'axe.js'
+          }
+        ]
       }
     },
     esbuild: {
@@ -130,9 +142,6 @@ module.exports = function (grunt) {
       data: {
         entry: 'lib/commons/aria/index.js',
         destFile: 'doc/aria-supported.md',
-        options: {
-          langs: langs
-        },
         listType: 'unsupported' // Possible values for listType: 'supported', 'unsupported', 'all'
       }
     },
@@ -140,17 +149,18 @@ module.exports = function (grunt) {
       rules: {
         tmp: 'tmp/rules.js',
         options: {
-          tags: grunt.option('tags')
+          tags: grunt.option('tags'),
+          langs: langs // Pass langs to configure task
         },
-        files: langs.map(function (lang) {
-          return {
+        files: [
+          {
             src: [''],
             dest: {
-              auto: 'tmp/rules' + lang + '.js',
-              descriptions: 'doc/rule-descriptions' + lang + '.md'
+              auto: 'tmp/rules.js',
+              descriptions: 'doc/rule-descriptions.md'
             }
-          };
-        })
+          }
+        ]
       }
     },
     'add-locale': {
@@ -190,12 +200,12 @@ module.exports = function (grunt) {
     },
     uglify: {
       beautify: {
-        files: langs.map(function (lang, i) {
-          return {
-            src: ['<%= concat.engine.files[' + i + '].dest %>'],
-            dest: '<%= concat.engine.files[' + i + '].dest %>'
-          };
-        }),
+        files: [
+          {
+            src: ['axe.js'],
+            dest: 'axe.js'
+          }
+        ],
         options: {
           mangle: false,
           compress: false,
@@ -212,12 +222,12 @@ module.exports = function (grunt) {
         }
       },
       minify: {
-        files: langs.map(function (lang, i) {
-          return {
-            src: ['<%= concat.engine.files[' + i + '].dest %>'],
-            dest: './axe' + lang + '.min.js'
-          };
-        }),
+        files: [
+          {
+            src: ['axe.js'],
+            dest: './axe.min.js'
+          }
+        ],
         options: {
           output: {
             comments: /^\/*! axe/
@@ -255,9 +265,7 @@ module.exports = function (grunt) {
     },
     bytesize: {
       all: {
-        src: langs.map(function (lang) {
-          return ['./axe' + lang + '.js', './axe' + lang + '.min.js'];
-        })
+        src: ['./axe.js', './axe.min.js']
       }
     }
   });
@@ -277,8 +285,10 @@ module.exports = function (grunt) {
     'validate',
     'metadata-function-map',
     'esbuild',
-    'configure',
     'babel',
+    'langs',
+    'babel:locale',
+    'configure',
     'concat:engine',
     'uglify',
     'aria-supported',
