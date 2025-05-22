@@ -1080,4 +1080,64 @@ describe('axe.configure', function () {
       });
     });
   });
+
+  describe('language fallback behavior', function () {
+    beforeEach(function () {
+      axe._load({});
+    });
+
+    it('should try full language code with underscores first', function () {
+      // Mock _loadLocale to return data for fr_FR
+      axe._loadLocale = function (lang) {
+        if (lang === 'pt_BR') {
+          return { lang: 'pt_BR', rules: {}, checks: {} };
+        }
+        return null;
+      };
+
+      axe.configure({ lang: 'pt-br' });
+      assert.equal(axe._audit.lang, 'pt_BR');
+    });
+
+    it('should fall back to base language if full code not found', function () {
+      // Mock _loadLocale to return data for fr but not fr_FR
+      axe._loadLocale = function (lang) {
+        if (lang === 'pt') {
+          return { lang: 'pt', rules: {}, checks: {} };
+        }
+        return null;
+      };
+
+      axe.configure({ lang: 'pt-br' });
+      assert.equal(axe._audit.lang, 'pt');
+    });
+
+    it('should fall back to English if neither full nor base language found', function () {
+      // Mock _loadLocale to return data only for en
+      axe._loadLocale = function (lang) {
+        if (lang === 'en') {
+          return { lang: 'en', rules: {}, checks: {} };
+        }
+        return null;
+      };
+
+      axe.configure({ lang: 'xyz-ABC' });
+      assert.equal(axe._audit.lang, 'en');
+    });
+
+    it('should throw error if no locale data is available', function () {
+      // Mock _loadLocale to return null for all languages
+      axe._loadLocale = function () {
+        return null;
+      };
+
+      assert.throws(
+        function () {
+          axe.configure({ lang: 'xyz-ABC' });
+        },
+        Error,
+        'Failed to load locale data for language: xyz-ABC, no locale data available'
+      );
+    });
+  });
 });
