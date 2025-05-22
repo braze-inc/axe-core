@@ -12,10 +12,8 @@ describe('locale-loader', function () {
       assert.ok(localeData.incompleteFallbackMessage);
     });
 
-    it('should throw error for unknown language', function () {
-      assert.throws(function () {
-        axe._loadLocale('xyz');
-      }, /Locale data not found for language: xyz/);
+    it('should return undefined for unknown language', function () {
+      assert.isUndefined(axe._loadLocale('xyz'));
     });
 
     it('should load locale data through configure', function () {

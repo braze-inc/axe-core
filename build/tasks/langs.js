@@ -203,9 +203,7 @@ module.exports = function (grunt) {
       ' */\n',
       'axe._loadLocale = function(lang) {\n',
       "\t'use strict';\n",
-      '\tif (!localeData[lang]) {\n',
-      '\t\tthrow new Error("Locale data not found for language: " + lang);\n',
-      '\t}\n',
+
       '\treturn localeData[lang];\n',
       '};\n'
     ].join('');
