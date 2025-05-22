@@ -113,10 +113,11 @@ describe('locale-loader', function () {
       assert.equal(axe._audit.lang, 'en', 'Language should be set to en');
     });
 
-    it('should throw error for invalid language in configure', function () {
-      assert.throws(function () {
-        axe.configure({ lang: 'xyz' });
-      }, /Failed to load locale data for language: xyz/);
+    it('should fall back to English for unknown language in configure', function () {
+      // Configure with unknown language
+      axe.configure({ lang: 'xyz' });
+      // Verify English locale was applied
+      assert.equal(axe._audit.lang, 'en');
     });
   });
 
